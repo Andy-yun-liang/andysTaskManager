@@ -3,9 +3,25 @@
 A lightweight command-line task manager built in C++.
 
 ## Installation
+
+### 1. Install g++
+
+**Windows**
+```powershell
+winget install -e --id GNU.GCC
+```
+**Ubuntu/Debian**
 ```bash
-git clone https://github.com/yourusername/andy-cli-notes-app.git
-cd andy-cli-notes-app
+sudo apt install g++
+```
+**macOS**
+
+g++ comes pre-installed, no action needed.
+
+### 2. Clone & Build
+```bash
+git clone https://github.com/andy-yun-liang/andysTaskManager.git
+cd andysTaskManager
 g++ main.cpp task.cpp -o andysTaskManager
 sudo cp andysTaskManager /usr/local/bin/andysTaskManager
 ```
