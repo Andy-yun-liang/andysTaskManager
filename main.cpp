@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -148,10 +149,19 @@ int main(int argc, char** argv) {
 
 
 
-                std::cout <<"Notes: " << "\n";
                 std::ifstream file(filename);
                 std::string line;
                 int counter = 1;
+                
+
+                //column name and header section
+                std::cout<< std::left
+                         << std::setw(10) << "TASK ID"
+                         << std::setw(10) << "STATUS"
+                         << "TASK" << "\n";
+
+                std::cout<< std::string(40, '-') << "\n";
+                
 
                 while (std::getline(file,line)){
 
@@ -159,9 +169,13 @@ int main(int argc, char** argv) {
 
                             counter++;
                             continue;
-                        }        
-
-                        std::cout<<"["<<counter<<"] "<<line<<"\n";
+                        }
+                        std::string id = "[" + std::to_string(counter) + "]";
+                        std::cout << std::left
+                                      << std::setw(10) <<id
+                                      << std::setw(10) << line.substr(0, 3)
+                                      << line.substr(4)
+                                      << "\n";
                         counter++;
                 }
                 file.close();
