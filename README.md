@@ -10,8 +10,7 @@ cd andy-cli-notes-app
 g++ main.cpp task.cpp -o andysTaskManager
 sudo cp andysTaskManager /usr/local/bin/andysTaskManager
 ```
-```
-```
+
 
 ## Commands
 
