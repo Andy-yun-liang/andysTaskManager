@@ -143,18 +143,29 @@ int main(int argc, char** argv) {
 
         }else if(cmd_used == "ls"){
                 
-                std::cout <<"viewing all notes: " << "\n";
+
+                bool show_all_notes = (argc > 2 && (std::string(argv[2]) == "-a" || std::string(argv[2])== "-all"));
+
+
+
+                std::cout <<"Notes: " << "\n";
                 std::ifstream file(filename);
                 std::string line;
                 int counter = 1;
 
                 while (std::getline(file,line)){
+
+                        if (!show_all_notes && line.substr(0,3) =="[x]"){
+
+                            counter++;
+                            continue;
+                        }        
+
                         std::cout<<"["<<counter<<"] "<<line<<"\n";
                         counter++;
                 }
                 file.close();
         }else if(cmd_used == "done"){
-
 
                 if(argc <3){
                   std::cerr<<"Usage: andysTaskManager done <id>"<<"\n";
