@@ -1,12 +1,10 @@
 #include <iomanip>
 #include <iostream>
-#include <fstream>
-#include <vector>
 #include <string>
 #include <cstdlib>
 #include <sys/stat.h>
 #include <sys/types.h>
-
+#include "task.h"
 
 int main(int argc, char** argv) {
         
@@ -29,156 +27,98 @@ int main(int argc, char** argv) {
         std::string dir = home + "/.andysTaskManager";
         std::string filename = dir + "/notes.txt";
 
-        // create ~/.andy if it doesn't exist (ok if it already exists)
         mkdir(dir.c_str(), 0777);
-
-
         std::string cmd_used = argv[1];
+
+
 
         if (cmd_used == "add"){
         
                 if(argc < 3){
-
-                std::cerr<<"Usage: andysTaskManager add <description>"<<"\n";
-                return 1;
+                  std::cerr<<"Usage: andysTaskManager add <description>"<<"\n";
+                  return 1;
                 }
-                std::ofstream file(filename, std::ios::app);
-                file <<"[ ] "<< argv[2]<<"\n";
-                file.close();
-                std::cout << "added: " << argv[2]<< " into notes.txt\n";
+                std::vector<Task> tasks = loadTasks(filename);
+                Task t;
+                t.id = tasks.size() + 1;
+                t.status = "[P]";
+                t.description = argv[2];
+                t.date_added = getCurrentDate();
+                t.date_completed = "";
+                tasks.push_back(t);
+                saveTasks(filename,tasks);
+                std::cout << "added: " << argv[2]<< "\n";
         
         }else if(cmd_used == "del"){
                 
                 if(argc < 3){
-
-                        std::cerr<<"Usage: andysTaskManager del <id>"<<"\n";
-                        return 1;
+                  std::cerr<<"Usage: andysTaskManager del <id>"<<"\n";
+                  return 1;
                 }
 
-                int id_num_to_be_deleted = std::stoi(argv[2]); //string to integer
-                std::ifstream in(filename);
-                if (!in) {
-                    std::cerr << "Error: notes.txt can't be opened\n";
-                    return 1;
-                }
+                int id_num_to_be_deleted = std::stoi(argv[2]);
+                std::vector<Task> tasks = loadTasks(filename);
 
-                std::vector<std::string> kept;
-                std::string line;
-                int counter = 1;
-
-                while (std::getline(in, line)) {
-                    if (counter != id_num_to_be_deleted) {
-                        kept.push_back(line);
-                    }
-                    counter++;
-                }
-                in.close();
-
-                if (id_num_to_be_deleted < 1 || id_num_to_be_deleted >= counter) {
+                if (id_num_to_be_deleted < 1 || id_num_to_be_deleted > (int)tasks.size()) {
                     std::cerr << "Error: no note at line " << id_num_to_be_deleted << "\n";
                     return 1;
                 }
-
-                std::ofstream out(filename); // overwrite
-                for (const auto& s : kept) {
-                    out << s << "\n";
-                }
-                out.close();
-
-                std::cout << "deleted note [" << id_num_to_be_deleted << "]\n";
-
-
-
+                tasks.erase(tasks.begin() + (id_num_to_be_deleted -1));
+                saveTasks(filename, tasks);
+                std::cout << "deleted task [" << id_num_to_be_deleted << "]\n";
           
         }else if(cmd_used == "edit"){
 
                 if(argc < 4){
-
-                        std::cerr<<"Usage: andysTaskManager edit <id> <new text>"<<"\n";
-                        return 1;
+                  std::cerr<<"Usage: andysTaskManager edit <id> <new text>"<<"\n";
+                  return 1;
                 }
-
-                
                 int id_of_note_to_be_edited = std::stoi(argv[2]);
-                std::string new_text = argv[3];
-                        
-                std::ifstream in(filename);
-                if(!in){
-                        std::cerr<<"Error: notes.txt can't be opened"<<"\n";
-                        return 1;
-                }
-
-
-                std::vector<std::string> new_file;
-                std::string line;
-                int counter = 1;
-
-                while (std::getline(in,line)){
+                std::vector<Task> tasks = loadTasks(filename);
                 
-                        if(counter == id_of_note_to_be_edited){
-                                std::string status = line.substr(0,4);
-                                new_file.push_back(status + new_text);
-                        }else{
-                                new_file.push_back(line);
-                        }
-
-                        counter++;
-                }
-                in.close();
-
-                if (id_of_note_to_be_edited < 1 || id_of_note_to_be_edited >= counter){
-                        
+                
+                if (id_of_note_to_be_edited < 1 || id_of_note_to_be_edited >= (int)tasks.size()){
                           std::cerr << "Error: no note at line " << id_of_note_to_be_edited << "\n";
                           return 1;
                 }
 
-
-               std::ofstream out(filename); // overwrite
-               for (const auto& s : new_file) {
-                   out << s << "\n";
-               }
-               out.close();
-
-               std::cout << "edited note [" << id_of_note_to_be_edited << "]\n";
+               tasks[id_of_note_to_be_edited - 1].description = argv[3];
+               saveTasks(filename,tasks);
+               std::cout << "edited task [" << id_of_note_to_be_edited << "]\n";
 
 
         }else if(cmd_used == "ls"){
                 
 
                 bool show_all_notes = (argc > 2 && (std::string(argv[2]) == "-a" || std::string(argv[2])== "-all"));
-
-
-
-                std::ifstream file(filename);
-                std::string line;
-                int counter = 1;
-                
+                std::vector<Task> tasks =loadTasks(filename);               
 
                 //column name and header section
                 std::cout<< std::left
-                         << std::setw(10) << "TASK ID"
+                         << std::setw(10) << "ID"
                          << std::setw(10) << "STATUS"
-                         << "TASK" << "\n";
-
-                std::cout<< std::string(40, '-') << "\n";
-                
-
-                while (std::getline(file,line)){
-
-                        if (!show_all_notes && line.substr(0,3) =="[x]"){
-
-                            counter++;
-                            continue;
-                        }
-                        std::string id = "[" + std::to_string(counter) + "]";
-                        std::cout << std::left
-                                      << std::setw(10) <<id
-                                      << std::setw(10) << line.substr(0, 3)
-                                      << line.substr(4)
-                                      << "\n";
-                        counter++;
+                         << std::setw(15) << "DATE ADDED";
+                if(show_all_notes){
+                  std::cout << std::setw(18) << "DATE COMPLETED";
                 }
-                file.close();
+                std::cout<< "DESCRIPTION" << "\n";
+
+                std::cout<< std::string(show_all_notes ? 80: 60,'-') << "\n";
+                
+                for(const auto& t : tasks){
+                            if(!show_all_notes && t.status == "[C]"){
+                                continue;
+                            }
+                            std::string id = "[" + std::to_string(t.id) + "]";
+                            std::cout << std::left
+                                      << std::setw(10) << id
+                                      << std::setw(10) << t.status
+                                      << std::setw(15) << t.date_added;
+                            if(show_all_notes){
+                              std::cout<<std::setw(18) <<t.date_completed;
+                            }
+                            std::cout<<t.description<< "\n";
+                        }
         }else if(cmd_used == "done"){
 
                 if(argc <3){
@@ -187,40 +127,20 @@ int main(int argc, char** argv) {
                 }
 
                 int id_of_note_completed = std::stoi(argv[2]);
-
-                std::ifstream in(filename);
-                if(!in){
-
-                  std::cerr<<"Error: notes.txt can't be opened"<<"\n";
-                  return 1;
-                }
-                std::string line;
-                std::vector<std::string> new_file;
-
-                int counter = 1;
-
-                while(std::getline(in,line)){
-                  if(counter == id_of_note_completed){
-                    if(line.substr(0,3) == "[ ]"){
-                      line[1] = 'x';
-                    }
-                  }
-                  new_file.push_back(line);
-                  counter++;
-                }
-                in.close();
-
-                if (id_of_note_completed < 1 || id_of_note_completed >= counter){
+                std::vector<Task> tasks = loadTasks(filename);
+                
+                if (id_of_note_completed < 1 || id_of_note_completed > (int)tasks.size()){
                   std::cerr<<"Error: No note on line "<<id_of_note_completed<<"\n";
                   return 1;
                 }
-
-                std::ofstream out(filename);
-                for( const auto& s: new_file){
-                  out<< s<< "\n";
+                if(tasks[id_of_note_completed - 1].status == "[P]"){
+                  tasks[id_of_note_completed - 1].status = "[C]";
+                  tasks[id_of_note_completed - 1].date_completed = getCurrentDate();
+                }else{
+                  std::cout<< "Task [" << id_of_note_completed << "] is already completed \n";
+                  return 0;
                 }
-                out.close();
-
+                saveTasks(filename, tasks);
                 std::cout<<"marked note ["<<id_of_note_completed <<"] as done"<<"\n";
 
 
