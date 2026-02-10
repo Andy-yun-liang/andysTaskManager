@@ -1,0 +1,146 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+
+
+int main(int argc, char** argv) {
+        
+
+        if(argc <2){
+
+        std::cerr<< "Usage: main add \"description\"" << "\n";
+
+        return 1;
+
+        }
+
+        std::string cmd_used = argv[1];
+
+        if (cmd_used == "add"){
+        
+                if(argc < 3){
+
+                std::cerr<<"Usage: main add <description>"<<"\n";
+                return 1;
+                }
+                std::ofstream file("notes.txt", std::ios::app);
+                file << argv[2]<<"\n";
+                file.close();
+                std::cout << "added: " << argv[2]<< " into notes.txt\n";
+        
+        }else if(cmd_used == "del"){
+                
+                if(argc < 3){
+
+                        std::cerr<<"Usage: main del <id>"<<"\n";
+                        return 1;
+                }
+
+                int id_num_to_be_deleted = std::stoi(argv[2]); //string to integer
+                std::ifstream in("notes.txt");
+                if (!in) {
+                    std::cerr << "Error: notes.txt can't be opened\n";
+                    return 1;
+                }
+
+                std::vector<std::string> kept;
+                std::string line;
+                int counter = 1;
+
+                while (std::getline(in, line)) {
+                    if (counter != id_num_to_be_deleted) {
+                        kept.push_back(line);
+                    }
+                    counter++;
+                }
+                in.close();
+
+                if (id_num_to_be_deleted < 1 || id_num_to_be_deleted >= counter) {
+                    std::cerr << "Error: no note at line " << id_num_to_be_deleted << "\n";
+                    return 1;
+                }
+
+                std::ofstream out("notes.txt"); // overwrite
+                for (const auto& s : kept) {
+                    out << s << "\n";
+                }
+                out.close();
+
+                std::cout << "deleted note [" << id_num_to_be_deleted << "]\n";
+
+
+
+          
+        }else if(cmd_used == "edit"){
+
+                if(argc < 4){
+
+                        std::cerr<<"Usage: main edit <id> <new text>"<<"\n";
+                        return 1;
+                }
+
+                
+                int id_of_note_to_be_edited = std::stoi(argv[2]);
+                std::string new_text = argv[3];
+                        
+                std::ifstream in("notes.txt");
+                if(!in){
+                        std::cerr<<"Error: notes.txt can't be opened"<<"\n";
+                        return 1;
+                }
+
+
+                std::vector<std::string> new_file;
+                std::string line;
+                int counter = 1;
+
+                while (std::getline(in,line)){
+                
+                        if(counter == id_of_note_to_be_edited){
+                                new_file.push_back(new_text);
+                        }else{
+                                new_file.push_back(line);
+                        }
+
+                        counter++;
+                }
+                in.close();
+
+                if (id_of_note_to_be_edited < 1 || id_of_note_to_be_edited >= counter){
+                        
+                          std::cerr << "Error: no note at line " << id_of_note_to_be_edited << "\n";
+                          return 1;
+                }
+
+
+               std::ofstream out("notes.txt"); // overwrite
+               for (const auto& s : new_file) {
+                   out << s << "\n";
+               }
+               out.close();
+
+               std::cout << "edited note [" << id_of_note_to_be_edited << "]\n";
+
+
+        }else if(cmd_used == "ls"){
+                
+                std::cout <<"viewing all notes: " << "\n";
+                std::ifstream file("notes.txt");
+                std::string line;
+                int counter = 1;
+
+                while (std::getline(file,line)){
+                        std::cout<<"["<<counter<<"] "<<line<<"\n";
+                        counter++;
+                }
+                file.close();
+        }else{
+
+                std::cout<< "command not found"<< "\n";
+        }
+
+
+
+
+}
