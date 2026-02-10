@@ -6,15 +6,22 @@
 #include <sys/types.h>
 #include "task.h"
 
+void printUsage() {
+    std::cerr << "Usage: andysTaskManager <command> [args]\n\n"
+              << "Commands:\n"
+              << "  add \"description\"     Add a new task\n"
+              << "  ls                     List pending tasks\n"
+              << "  ls -a                  List all tasks including completed\n"
+              << "  done <id>              Mark a task as complete\n"
+              << "  edit <id> \"new text\"   Edit a task description\n"
+              << "  del <id>               Delete a task\n";
+}
+
 int main(int argc, char** argv) {
-        
 
-        if(argc <2){
-
-        std::cerr<< "Usage: andysTaskManager add \"description\"" << "\n";
-
-        return 1;
-
+        if(argc < 2){
+            printUsage();
+            return 1;
         }
 
         const char* home_c = std::getenv("HOME");
@@ -30,10 +37,8 @@ int main(int argc, char** argv) {
         mkdir(dir.c_str(), 0777);
         std::string cmd_used = argv[1];
 
-
-
         if (cmd_used == "add"){
-        
+
                 if(argc < 3){
                   std::cerr<<"Usage: andysTaskManager add <description>"<<"\n";
                   return 1;
@@ -48,9 +53,9 @@ int main(int argc, char** argv) {
                 tasks.push_back(t);
                 saveTasks(filename,tasks);
                 std::cout << "added: " << argv[2]<< "\n";
-        
+
         }else if(cmd_used == "del"){
-                
+
                 if(argc < 3){
                   std::cerr<<"Usage: andysTaskManager del <id>"<<"\n";
                   return 1;
@@ -66,7 +71,7 @@ int main(int argc, char** argv) {
                 tasks.erase(tasks.begin() + (id_num_to_be_deleted -1));
                 saveTasks(filename, tasks);
                 std::cout << "deleted task [" << id_num_to_be_deleted << "]\n";
-          
+
         }else if(cmd_used == "edit"){
 
                 if(argc < 4){
@@ -75,8 +80,7 @@ int main(int argc, char** argv) {
                 }
                 int id_of_note_to_be_edited = std::stoi(argv[2]);
                 std::vector<Task> tasks = loadTasks(filename);
-                
-                
+
                 if (id_of_note_to_be_edited < 1 || id_of_note_to_be_edited >= (int)tasks.size()){
                           std::cerr << "Error: no note at line " << id_of_note_to_be_edited << "\n";
                           return 1;
@@ -86,14 +90,11 @@ int main(int argc, char** argv) {
                saveTasks(filename,tasks);
                std::cout << "edited task [" << id_of_note_to_be_edited << "]\n";
 
-
         }else if(cmd_used == "ls"){
-                
 
                 bool show_all_notes = (argc > 2 && (std::string(argv[2]) == "-a" || std::string(argv[2])== "-all"));
-                std::vector<Task> tasks =loadTasks(filename);               
+                std::vector<Task> tasks = loadTasks(filename);
 
-                //column name and header section
                 std::cout<< std::left
                          << std::setw(10) << "ID"
                          << std::setw(10) << "STATUS"
@@ -104,7 +105,7 @@ int main(int argc, char** argv) {
                 std::cout<< "DESCRIPTION" << "\n";
 
                 std::cout<< std::string(show_all_notes ? 80: 60,'-') << "\n";
-                
+
                 for(const auto& t : tasks){
                             if(!show_all_notes && t.status == "[C]"){
                                 continue;
@@ -119,6 +120,7 @@ int main(int argc, char** argv) {
                             }
                             std::cout<<t.description<< "\n";
                         }
+
         }else if(cmd_used == "done"){
 
                 if(argc <3){
@@ -128,7 +130,7 @@ int main(int argc, char** argv) {
 
                 int id_of_note_completed = std::stoi(argv[2]);
                 std::vector<Task> tasks = loadTasks(filename);
-                
+
                 if (id_of_note_completed < 1 || id_of_note_completed > (int)tasks.size()){
                   std::cerr<<"Error: No note on line "<<id_of_note_completed<<"\n";
                   return 1;
@@ -143,14 +145,9 @@ int main(int argc, char** argv) {
                 saveTasks(filename, tasks);
                 std::cout<<"marked note ["<<id_of_note_completed <<"] as done"<<"\n";
 
-
-
         }else{
-
-                std::cout<< "command not found"<< "\n";
+            std::cerr << "Unknown command: \"" << cmd_used << "\"\n\n";
+            printUsage();
+            return 1;
         }
-
-
-
-
 }
