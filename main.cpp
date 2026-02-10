@@ -2,6 +2,9 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <cstdlib>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 
 int main(int argc, char** argv) {
@@ -15,6 +18,20 @@ int main(int argc, char** argv) {
 
         }
 
+        const char* home_c = std::getenv("HOME");
+        if (!home_c) {
+            std::cerr << "Error: HOME not set\n";
+            return 1;
+        }
+
+        std::string home = home_c;
+        std::string dir = home + "/.andysTaskManager";
+        std::string filename = dir + "/notes.txt";
+
+        // create ~/.andy if it doesn't exist (ok if it already exists)
+        mkdir(dir.c_str(), 0777);
+
+
         std::string cmd_used = argv[1];
 
         if (cmd_used == "add"){
@@ -24,7 +41,7 @@ int main(int argc, char** argv) {
                 std::cerr<<"Usage: main add <description>"<<"\n";
                 return 1;
                 }
-                std::ofstream file("notes.txt", std::ios::app);
+                std::ofstream file(filename, std::ios::app);
                 file << argv[2]<<"\n";
                 file.close();
                 std::cout << "added: " << argv[2]<< " into notes.txt\n";
@@ -61,7 +78,7 @@ int main(int argc, char** argv) {
                     return 1;
                 }
 
-                std::ofstream out("notes.txt"); // overwrite
+                std::ofstream out(filename); // overwrite
                 for (const auto& s : kept) {
                     out << s << "\n";
                 }
@@ -84,7 +101,7 @@ int main(int argc, char** argv) {
                 int id_of_note_to_be_edited = std::stoi(argv[2]);
                 std::string new_text = argv[3];
                         
-                std::ifstream in("notes.txt");
+                std::ifstream in(filename);
                 if(!in){
                         std::cerr<<"Error: notes.txt can't be opened"<<"\n";
                         return 1;
@@ -114,7 +131,7 @@ int main(int argc, char** argv) {
                 }
 
 
-               std::ofstream out("notes.txt"); // overwrite
+               std::ofstream out(filename); // overwrite
                for (const auto& s : new_file) {
                    out << s << "\n";
                }
@@ -126,7 +143,7 @@ int main(int argc, char** argv) {
         }else if(cmd_used == "ls"){
                 
                 std::cout <<"viewing all notes: " << "\n";
-                std::ifstream file("notes.txt");
+                std::ifstream file(filename);
                 std::string line;
                 int counter = 1;
 
